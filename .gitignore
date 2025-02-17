@@ -1,0 +1,10 @@
+/.env
+/config.json
+/.dockerignore
+/.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+/.idea/.gitignore
+/.idea
