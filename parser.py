@@ -1,6 +1,7 @@
 from typing import Tuple
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
+
 from config import EMPLOYEES, WEEKLY_WORK_HOURS, REMINDER_LIMIT
 
 
@@ -17,13 +18,19 @@ def extract_last_level_rows(html_content):
 def parse_time_entries(time_entries_html: str) -> dict[str, list[str]]:
     soup: BeautifulSoup = BeautifulSoup(time_entries_html, "html.parser")
     rows = soup.find_all("tr", class_="last-level")
-
     work_hours: dict[str, list[str]] = {}
     for row in rows:
-        employee_name = row.find("td", class_="name").get_text(strip=True)
+        if not isinstance(row, Tag):
+            continue
+        employee_name_td = row.find("td", class_="name")
+        if not isinstance(employee_name_td, Tag):
+            continue
+        employee_name = employee_name_td.get_text(strip=True)
         hours: list[str] = []
         hour_cells = row.find_all("td", class_="hours")
         for cell in hour_cells:
+            if not isinstance(cell, Tag):
+                continue
             hour_span = cell.find("span", class_="hours-int")
             hours.append(hour_span.get_text(strip=True) if hour_span else "0")
         if employee_name in EMPLOYEES:

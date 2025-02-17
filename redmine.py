@@ -43,8 +43,11 @@ def fetch_page_source():
 
 
 async def scheduled_time_check(bot):
-    page_html = fetch_page_source()
-    time_entries_html = extract_last_level_rows(page_html)
-    report_message, has_missing_entries = format_hours_report(time_entries_html)
-    if has_missing_entries:
-        await bot.send_message(TELEGRAM_CHAT_ID, report_message, parse_mode="HTML")
+    try:
+        page_html = fetch_page_source()
+        time_entries_html = extract_last_level_rows(page_html)
+        report_message, has_missing_entries = format_hours_report(time_entries_html)
+        if has_missing_entries:
+            await bot.send_message(TELEGRAM_CHAT_ID, report_message, parse_mode="HTML")
+    except Exception as error:
+        await bot.send_message(TELEGRAM_CHAT_ID, f"Ошибка: {error}")

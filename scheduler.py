@@ -1,12 +1,12 @@
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
+from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore
+from apscheduler.triggers.cron import CronTrigger  # type: ignore
 from pytz import timezone
 from redmine import scheduled_time_check
 
 scheduler = AsyncIOScheduler()
 
 
-def start_scheduler(bot):
+def start_scheduler(bot: object) -> None:
     scheduler.add_job(
         lambda: scheduled_time_check(bot),
         trigger=CronTrigger(
