@@ -5,6 +5,8 @@ This **Telegram bot** automates tracking work hours in **Redmine**. It scrapes d
 
 ⚠ **Warning:** This bot is configured for a **custom Redmine report**. If you use a different Redmine setup, you must **modify the report parsing logic** in the code to match your report's structure.  
 
+⚠ **Warning:** The bot sends error messages to a Telegram chat. Do not connect it to public groups, as confidential data from Redmine may be exposed.
+
 ## 🚀 Features  
 - **Automated Redmine login** using Selenium  
 - **Daily scheduled reports** of logged work hours  

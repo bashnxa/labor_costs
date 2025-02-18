@@ -1,6 +1,8 @@
 import json
 import os
 from dotenv import load_dotenv
+from collections import namedtuple
+from pytz import timezone
 
 load_dotenv()
 
@@ -12,6 +14,12 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 REPORT_URL = os.getenv("REPORT_URL", "")
 REMINDER_LIMIT = 0.8
 WEEKLY_WORK_HOURS = 40
+
+TimeConfig = namedtuple("TimeConfig", ["hour", "minute", "timezone"])
+SCHEDULE_TIME = TimeConfig(hour=16, minute=45, timezone=timezone("Asia/Yekaterinburg"))
+SCHEDULE_DAYS = "mon-fri"
+SCHEDULE_MISFIRE_GRACE_TIME = 30
+SCHEDULE_COALESCE = True
 
 config_path = os.getenv("CONFIG_PATH", "config.json")
 with open(config_path, "r", encoding="utf-8") as file:

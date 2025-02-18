@@ -6,9 +6,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
+
 from config import REDMINE_LOGIN_URL, REDMINE_USERNAME, REDMINE_PASSWORD, REPORT_URL
-from parser import extract_last_level_rows, format_hours_report
-from config import TELEGRAM_CHAT_ID
 
 
 def get_webdriver():
@@ -22,7 +21,7 @@ def get_webdriver():
     )
 
 
-def fetch_page_source():
+def fetch_page_source() -> str:
     with get_webdriver() as driver:
         try:
             driver.get(REDMINE_LOGIN_URL)
@@ -40,14 +39,3 @@ def fetch_page_source():
             return driver.page_source
         except (TimeoutException, NoSuchElementException) as error:
             return f"Ошибка при загрузке страницы: {error}"
-
-
-async def scheduled_time_check(bot):
-    try:
-        page_html = fetch_page_source()
-        time_entries_html = extract_last_level_rows(page_html)
-        report_message, has_missing_entries = format_hours_report(time_entries_html)
-        if has_missing_entries:
-            await bot.send_message(TELEGRAM_CHAT_ID, report_message, parse_mode="HTML")
-    except Exception as error:
-        await bot.send_message(TELEGRAM_CHAT_ID, f"Ошибка: {error}")
