@@ -45,11 +45,12 @@ def parse_time_entries(time_entries_html: str) -> dict[str, list[str]]:
 
 def _generate_report(work_hours: dict[str, list[str]]) -> str:
     report_message: str = "📊 Таблица учета времени:\n\n"
-    max_name_length: int = max(len(name) for name in work_hours.keys())
+    short_names = [name.split()[0] for name in work_hours.keys()]
+    max_name_length: int = max(len(name) for name in short_names)
     for name, hours in work_hours.items():
         formatted_hours: str = "|".join(hours[:-1])
         total: str = hours[-1]
-        name_padded: str = name.ljust(max_name_length)
+        name_padded: str = name.split()[0].ljust(max_name_length)
         report_message += f"👤 {name_padded}|{formatted_hours} ➡️{total}\n"
     return f"<pre>{report_message}</pre>"
 
