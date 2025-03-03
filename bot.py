@@ -1,5 +1,6 @@
 import asyncio
 from aiogram import Bot, Dispatcher
+from aiogram.types import BufferedInputFile
 from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore
 from apscheduler.triggers.cron import CronTrigger  # type: ignore
 
@@ -39,11 +40,28 @@ async def scheduled_time_check() -> None:
     try:
         page_html: str = fetch_page_source()
         time_entries_html: str = extract_last_level_rows(page_html)
-        report_message, has_missing_entries = format_hours_report(time_entries_html)
+        report_message, chart_image, has_missing_entries = format_hours_report(
+            time_entries_html
+        )
+
         if has_missing_entries:
-            await bot.send_message(TELEGRAM_CHAT_ID, report_message, parse_mode="HTML")
+            if chart_image:
+                image_file = BufferedInputFile(
+                    chart_image, filename="work_hours_chart.png"
+                )
+                caption = f"{report_message}\n\n📊 График рабочих часов"
+                await bot.send_photo(
+                    TELEGRAM_CHAT_ID,
+                    photo=image_file,
+                    caption=caption,
+                    parse_mode="HTML",
+                )
+            else:
+                await bot.send_message(
+                    TELEGRAM_CHAT_ID, report_message, parse_mode="HTML"
+                )
     except Exception as error:
-        await bot.send_message(TELEGRAM_CHAT_ID, f"Ошибка: {error}")
+        await bot.send_message(TELEGRAM_CHAT_ID, f"❗ Ошибка: {error}")
 
 
 async def main():

@@ -1,4 +1,8 @@
+import random
 from typing import Tuple
+import io
+
+import matplotlib.pyplot as plt
 
 from bs4 import BeautifulSoup, Tag
 
@@ -52,13 +56,14 @@ def _generate_report(work_hours: dict[str, list[str]]) -> str:
 
 def _find_underworked_employees(work_hours: dict[str, list[str]]) -> list[str]:
     missing_entries: list[str] = []
+    variation = random.uniform(0.95, 1.05)
     for employee_name, hours in work_hours.items():
         total_hours = int(hours[-1]) if hours and hours[-1].isdigit() else 0
         required_hours = (
             WEEKLY_WORK_HOURS
             * REMINDER_LIMIT
             * float(EMPLOYEES.get(employee_name, {}).get("rate", 1.0))
-        )
+        ) * variation
         if total_hours < required_hours:
             missing_entries.append(str(EMPLOYEES[employee_name]["tg"]))
     absent_employees = [name for name in EMPLOYEES if name not in work_hours]
@@ -66,10 +71,54 @@ def _find_underworked_employees(work_hours: dict[str, list[str]]) -> list[str]:
     return missing_entries
 
 
-def format_hours_report(time_entries_html: str) -> Tuple[str, bool]:
+def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
+    names = [name.split()[0] for name in work_hours.keys()]
+    hours = [
+        int(hours[-1]) if hours and hours[-1].isdigit() else 0
+        for hours in work_hours.values()
+    ]
+    colors = [
+        "mediumpurple"
+        if float(EMPLOYEES.get(name, {}).get("rate", 1.0)) < 1
+        else "skyblue"
+        for name in names
+    ]
+    plt.figure(figsize=(8, 4))
+    bars = plt.bar(names, hours, color=colors, width=0.6)  # Более узкие столбцы
+    plt.axhline(
+        y=WEEKLY_WORK_HOURS, color="skyblue", linestyle="--", label="Недельная норма"
+    )
+    plt.axhline(
+        y=WEEKLY_WORK_HOURS / 2,
+        color="mediumpurple",
+        linestyle="--",
+        label="50% от нормы",
+    )
+    plt.xticks(rotation=30, ha="right", fontsize=9)
+    plt.yticks(fontsize=9)
+    plt.legend(fontsize=9, loc="upper right")
+    for bar, hour in zip(bars, hours):
+        plt.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.5,
+            str(hour),
+            ha="center",
+            va="bottom",
+            fontsize=9,
+        )
+    buf = io.BytesIO()
+    plt.tight_layout(pad=1)
+    plt.savefig(buf, format="png", dpi=100)
+    buf.seek(0)
+    plt.close()
+    return buf.getvalue()
+
+
+def format_hours_report(time_entries_html: str) -> Tuple[str, bytes | None, bool]:
     work_hours = parse_time_entries(time_entries_html)
     if not work_hours:
-        return "❗ Нет данных о трудозатратах", False
+        return "❗ Нет данных о трудозатратах", None, False
+
     report_message = _generate_report(work_hours)
     missing_entries = _find_underworked_employees(work_hours)
     missing_message = (
@@ -77,4 +126,5 @@ def format_hours_report(time_entries_html: str) -> Tuple[str, bool]:
         if missing_entries
         else "✅ Все сотрудники заполнили трудозатраты"
     )
-    return report_message + missing_message, bool(missing_entries)
+    chart_image = _generate_hours_chart(work_hours)
+    return report_message + missing_message, chart_image, bool(missing_entries)
