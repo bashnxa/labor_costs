@@ -73,7 +73,7 @@ def _find_underworked_employees(work_hours: dict[str, list[str]]) -> list[str]:
 
 
 def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
-    names = [name.split()[0] for name in work_hours.keys()]
+    short_names = [name.split()[0] for name in work_hours.keys()]
     hours = [
         int(hours[-1]) if hours and hours[-1].isdigit() else 0
         for hours in work_hours.values()
@@ -82,10 +82,10 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
         "mediumpurple"
         if float(EMPLOYEES.get(name, {}).get("rate", 1.0)) < 1
         else "skyblue"
-        for name in names
+        for name in work_hours.keys()
     ]
     plt.figure(figsize=(8, 4))
-    bars = plt.bar(names, hours, color=colors, width=0.6)  # Более узкие столбцы
+    bars = plt.bar(short_names, hours, color=colors, width=0.6)
     plt.axhline(
         y=WEEKLY_WORK_HOURS, color="skyblue", linestyle="--", label="Недельная норма"
     )
