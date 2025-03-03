@@ -1,5 +1,7 @@
 # Redmine Work Hours Tracker Bot  
 
+![Telegram Bot Report Example](https://github.com/bashnxa/labor_costs/blob/main/assets/bot_report_example.png?raw=true)
+
 ## 🛠 Overview  
 This **Telegram bot** automates tracking work hours in **Redmine**. It scrapes data from Redmine reports using **Selenium** and **BeautifulSoup**, then formats and sends work hour reports via Telegram. The bot also reminds employees to log their hours if they fall below the expected threshold.  
 
@@ -12,7 +14,7 @@ This **Telegram bot** automates tracking work hours in **Redmine**. It scrapes d
 - **Daily scheduled reports** of logged work hours  
 - **Custom reminders** for employees who haven't logged enough time  
 - **Manual report check** via the `/check` command in Telegram  
-- **Configurable employee work rates**  
+- **Configurable employee work rates** 
 
 ## 🏗 Tech Stack  
 - **Python** (asyncio, aiogram, Selenium, BeautifulSoup)  
@@ -27,3 +29,4 @@ This **Telegram bot** automates tracking work hours in **Redmine**. It scrapes d
    ```bash
    git clone https://github.com/yourusername/labor_costs.git
    cd labor_costs
+   
