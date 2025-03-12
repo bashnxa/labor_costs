@@ -10,15 +10,17 @@ from config import (
     SCHEDULE_DAYS,
     SCHEDULE_MISFIRE_GRACE_TIME,
     SCHEDULE_COALESCE,
-    TELEGRAM_CHAT_ID,
+    TELEGRAM_CHAT_ID, LANG,
 )
 from handlers import register_handlers
 from parser import extract_last_level_rows, format_hours_report
 from redmine import fetch_page_source
+from translations import t, set_language
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 scheduler = AsyncIOScheduler()
+set_language(LANG)
 
 
 def start_scheduler() -> None:
@@ -60,7 +62,7 @@ async def scheduled_time_check() -> None:
                     TELEGRAM_CHAT_ID, report_message, parse_mode="HTML"
                 )
     except Exception as error:
-        await bot.send_message(TELEGRAM_CHAT_ID, f"❗ Ошибка: {error}")
+        await bot.send_message(TELEGRAM_CHAT_ID, f"❗ {t('error')}: {error}")
 
 
 async def main():

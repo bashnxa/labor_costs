@@ -5,6 +5,8 @@ from redmine import fetch_page_source
 from parser import extract_last_level_rows, format_hours_report
 from aiogram.types import BufferedInputFile
 
+from translations import t
+
 
 async def manual_check(message: Message):
     try:
@@ -20,7 +22,7 @@ async def manual_check(message: Message):
             await message.answer(report_message, parse_mode="HTML")
 
     except Exception as error:
-        await message.answer(f"❗ Ошибка: {error}")
+        await message.answer(f"❗ {t('error')}: {error}")
 
 
 def register_handlers(dp: Dispatcher):

@@ -10,6 +10,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
 
 from config import REDMINE_LOGIN_URL, REDMINE_USERNAME, REDMINE_PASSWORD, REPORT_URL
+from translations import t
 
 
 def get_webdriver():
@@ -40,5 +41,9 @@ def fetch_page_source() -> str:
                 lambda d: d.execute_script("return document.readyState") == "complete"
             )
             return driver.page_source
-        except (TimeoutException, NoSuchElementException) as error:
-            return f"Ошибка при загрузке страницы: {error}"
+        except TimeoutException:
+            return t("error_timeout")
+        except NoSuchElementException:
+            return t("error_no_element")
+        except Exception as error:
+            return f"{t('error_generic')}: {error}"

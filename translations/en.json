@@ -1,0 +1,11 @@
+{
+  "no_data": "No data available",
+  "weekly_norm": "Weekly norm",
+  "half_norm": "50% of norm",
+  "fill_hours": "Fill in work hours",
+  "all_filled": "All employees filled in work hours",
+  "error": "Error",
+  "error_timeout": "Error: Page load timed out",
+  "error_no_element": "Error: Could not find the required element",
+  "error_generic": "An unexpected error occurred"
+}

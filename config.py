@@ -25,3 +25,6 @@ config_path = os.getenv("CONFIG_PATH", "config.json")
 with open(config_path, "r", encoding="utf-8") as file:
     config = json.load(file)
 EMPLOYEES = config.get("employees", {})
+
+LANG = os.getenv("LANG", "eng")
+

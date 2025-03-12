@@ -1,6 +1,7 @@
 import random
 from typing import Tuple
 import io
+from translations import t
 
 import matplotlib.pyplot as plt
 
@@ -15,7 +16,7 @@ def extract_last_level_rows(html_content):
     return (
         "\n".join(str(row) for row in time_entry_rows)
         if time_entry_rows
-        else "Нет данных"
+        else t("no_data")
     )
 
 
@@ -87,13 +88,13 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
     plt.figure(figsize=(5, 3))
     bars = plt.bar(short_names, hours, color=colors, width=0.6)
     plt.axhline(
-        y=WEEKLY_WORK_HOURS, color="skyblue", linestyle="--", label="Недельная норма"
+        y=WEEKLY_WORK_HOURS, color="skyblue", linestyle="--", label=t("weekly_norm")
     )
     plt.axhline(
         y=WEEKLY_WORK_HOURS / 2,
         color="mediumpurple",
         linestyle="--",
-        label="50% от нормы",
+        label=t("half_norm"),
     )
     plt.xticks(rotation=30, ha="right", fontsize=9)
     plt.yticks(fontsize=9)
@@ -118,14 +119,14 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
 def format_hours_report(time_entries_html: str) -> Tuple[str, bytes | None, bool]:
     work_hours = parse_time_entries(time_entries_html)
     if not work_hours:
-        return "❗ Нет данных о трудозатратах", None, False
+        return t("no_data"), None, False
 
     report_message = _generate_report(work_hours)
     missing_entries = _find_underworked_employees(work_hours)
     missing_message = (
-        "⏳ Заполните трудовые затраты: " + " ".join(missing_entries)
+        "⏳ " + t("fill_hours") + ": " + ", ".join(missing_entries)
         if missing_entries
-        else "✅ Все сотрудники заполнили трудозатраты"
+        else "✅ " + t("all_filled")
     )
     chart_image = _generate_hours_chart(work_hours)
     return report_message + missing_message, chart_image, bool(missing_entries)
