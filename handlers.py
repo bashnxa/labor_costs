@@ -13,9 +13,8 @@ async def manual_check(message: Message):
         report_message, chart_image, _ = format_hours_report(time_entries_html)
         if chart_image:
             image_file = BufferedInputFile(chart_image, filename="work_hours_chart.png")
-            caption = f"{report_message}\n\n📊 График рабочих часов"
             await message.answer_photo(
-                photo=image_file, caption=caption, parse_mode="HTML"
+                photo=image_file, caption=report_message, parse_mode="HTML"
             )
         else:
             await message.answer(report_message, parse_mode="HTML")

@@ -49,11 +49,10 @@ async def scheduled_time_check() -> None:
                 image_file = BufferedInputFile(
                     chart_image, filename="work_hours_chart.png"
                 )
-                caption = f"{report_message}\n\n📊 График рабочих часов"
                 await bot.send_photo(
                     TELEGRAM_CHAT_ID,
                     photo=image_file,
-                    caption=caption,
+                    caption=report_message,
                     parse_mode="HTML",
                 )
             else:

@@ -44,7 +44,7 @@ def parse_time_entries(time_entries_html: str) -> dict[str, list[str]]:
 
 
 def _generate_report(work_hours: dict[str, list[str]]) -> str:
-    report_message: str = "📊 Таблица учета времени:\n\n"
+    report_message: str = ""
     short_names = [name.split()[0] for name in work_hours.keys()]
     max_name_length: int = max(len(name) for name in short_names)
     for name, hours in work_hours.items():
@@ -97,7 +97,7 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
     )
     plt.xticks(rotation=30, ha="right", fontsize=9)
     plt.yticks(fontsize=9)
-    plt.legend(fontsize=9, loc="upper right")
+    plt.legend(fontsize=9, loc="lower right", framealpha=0.3)
     for bar, hour in zip(bars, hours):
         plt.text(
             bar.get_x() + bar.get_width() / 2,
@@ -123,7 +123,7 @@ def format_hours_report(time_entries_html: str) -> Tuple[str, bytes | None, bool
     report_message = _generate_report(work_hours)
     missing_entries = _find_underworked_employees(work_hours)
     missing_message = (
-        "\n⏳ Заполните трудовые затраты: " + " ".join(missing_entries)
+        "⏳ Заполните трудовые затраты: " + " ".join(missing_entries)
         if missing_entries
         else "✅ Все сотрудники заполнили трудозатраты"
     )
