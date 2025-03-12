@@ -1,3 +1,5 @@
+import time
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -32,6 +34,7 @@ def fetch_page_source() -> str:
                 EC.presence_of_element_located((By.ID, "password"))
             ).send_keys(REDMINE_PASSWORD)
             driver.find_element(By.NAME, "login").click()
+            time.sleep(3)
             driver.get(REPORT_URL)
             WebDriverWait(driver, 10).until(
                 lambda d: d.execute_script("return document.readyState") == "complete"
