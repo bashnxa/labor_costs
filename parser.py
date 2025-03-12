@@ -84,7 +84,7 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
         else "skyblue"
         for name in work_hours.keys()
     ]
-    plt.figure(figsize=(8, 4))
+    plt.figure(figsize=(5, 3))
     bars = plt.bar(short_names, hours, color=colors, width=0.6)
     plt.axhline(
         y=WEEKLY_WORK_HOURS, color="skyblue", linestyle="--", label="Недельная норма"
