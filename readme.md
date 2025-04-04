@@ -14,4 +14,8 @@ This **Telegram bot** automates tracking work hours in **Redmine**. It scrapes d
 - **Daily scheduled reports** of logged work hours  
 - **Custom reminders** for employees who haven't logged enough time  
 - **Manual report check** via the `/check` command in Telegram  
-- **Configurable employee work rates**   
+- **Configurable employee work rates**
+
+## 💡 Follow on Telegram
+Get bite-sized Python tips, best practices and refactoring tricks  
+👉 [t.me/py_snack](https://t.me/py_snack)
