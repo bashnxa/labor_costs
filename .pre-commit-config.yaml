@@ -1,0 +1,23 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+-   repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+    -   id: black
+-   repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.11.5
+    hooks:
+      - id: ruff
+        name: ruff-format
+        entry: ruff format
+        language: system
+        types: [ python ]
+
+      - id: ruff
+        name: ruff-check
+        args: [ --fix ]

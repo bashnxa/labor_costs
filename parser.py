@@ -51,7 +51,7 @@ def _generate_report(work_hours: dict[str, list[str]]) -> str:
     for name, hours in work_hours.items():
         formatted_hours: str = "|".join(hours[:-1])
         total: str = hours[-1]
-        name_padded: str = name.split()[0].ljust(max_name_length)
+        name_padded: str = f"{name.split()[0]:<{max_name_length}}"
         report_message += f"👤 {name_padded}|{formatted_hours} ➡️{total}\n"
     return f"<pre>{report_message}</pre>"
 
@@ -80,9 +80,11 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
         for hours in work_hours.values()
     ]
     colors = [
-        "mediumpurple"
-        if float(EMPLOYEES.get(name, {}).get("rate", 1.0)) < 1
-        else "skyblue"
+        (
+            "mediumpurple"
+            if float(EMPLOYEES.get(name, {}).get("rate", 1.0)) < 1
+            else "skyblue"
+        )
         for name in work_hours.keys()
     ]
     plt.figure(figsize=(5, 3))

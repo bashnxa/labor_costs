@@ -27,4 +27,3 @@ with open(config_path, "r", encoding="utf-8") as file:
 EMPLOYEES = config.get("employees", {})
 
 LANG = os.getenv("LANG", "eng")
-

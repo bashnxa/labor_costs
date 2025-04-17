@@ -1,4 +1,7 @@
 import asyncio
+import os
+from functools import partial
+
 from aiogram import Bot, Dispatcher
 from aiogram.types import BufferedInputFile
 from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore
@@ -10,22 +13,42 @@ from config import (
     SCHEDULE_DAYS,
     SCHEDULE_MISFIRE_GRACE_TIME,
     SCHEDULE_COALESCE,
-    TELEGRAM_CHAT_ID, LANG,
+    TELEGRAM_CHAT_ID,
+    LANG,
 )
+from aiohttp import TCPConnector
 from handlers import register_handlers
 from parser import extract_last_level_rows, format_hours_report
 from redmine import fetch_page_source
 from translations import t, set_language
 
-bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 scheduler = AsyncIOScheduler()
 set_language(LANG)
 
 
-def start_scheduler() -> None:
+def validate_env_vars():
+    required_vars = [
+        "REDMINE_LOGIN_URL",
+        "REDMINE_USERNAME",
+        "REDMINE_PASSWORD",
+        "BOT_TOKEN",
+        "TELEGRAM_CHAT_ID",
+        "REPORT_URL",
+        "CONFIG_PATH",
+        "LANG",
+    ]
+    for var in required_vars:
+        if not os.getenv(var):
+            raise EnvironmentError(f"Missing required environment variable: {var}")
+
+
+validate_env_vars()
+
+
+def start_scheduler(bot: Bot) -> None:
     scheduler.add_job(
-        scheduled_time_check,
+        partial(scheduled_time_check, bot),
         trigger=CronTrigger(
             hour=SCHEDULE_TIME.hour,
             minute=SCHEDULE_TIME.minute,
@@ -38,7 +61,7 @@ def start_scheduler() -> None:
     scheduler.start()
 
 
-async def scheduled_time_check() -> None:
+async def scheduled_time_check(bot: Bot) -> None:
     try:
         page_html: str = fetch_page_source()
         time_entries_html: str = extract_last_level_rows(page_html)
@@ -66,8 +89,11 @@ async def scheduled_time_check() -> None:
 
 
 async def main():
+    connector = TCPConnector(ttl_dns_cache=300)
+    bot = Bot(token=BOT_TOKEN, connector=connector)
+
     register_handlers(dp)
-    start_scheduler()
+    start_scheduler(bot)
     await dp.start_polling(bot)
 
 
