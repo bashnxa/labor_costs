@@ -10,7 +10,7 @@ def load_translations() -> dict:
         if filename.endswith(".json"):
             lang_code = filename.split(".")[0]
             with open(
-                os.path.join(os.path.dirname(__file__), filename), "r", encoding="utf-8"
+                os.path.join(os.path.dirname(__file__), filename), encoding="utf-8"
             ) as file:
                 translations[lang_code] = json.load(file)
     return translations

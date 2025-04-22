@@ -22,7 +22,7 @@ SCHEDULE_MISFIRE_GRACE_TIME = 30
 SCHEDULE_COALESCE = True
 
 config_path = os.getenv("CONFIG_PATH", "config.json")
-with open(config_path, "r", encoding="utf-8") as file:
+with open(config_path, encoding="utf-8") as file:
     config = json.load(file)
 EMPLOYEES = config.get("employees", {})
 

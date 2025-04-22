@@ -9,6 +9,11 @@ repos:
     - id: name-tests-test
     - id: requirements-txt-fixer
 
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v3.19.1
+    hooks:
+    -   id: pyupgrade
+
 -   repo: https://github.com/psf/black
     rev: 25.1.0
     hooks:

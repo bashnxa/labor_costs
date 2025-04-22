@@ -40,7 +40,7 @@ def validate_env_vars():
     ]
     for var in required_vars:
         if not os.getenv(var):
-            raise EnvironmentError(f"Missing required environment variable: {var}")
+            raise OSError(f"Missing required environment variable: {var}")
 
 
 validate_env_vars()

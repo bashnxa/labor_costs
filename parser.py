@@ -1,5 +1,4 @@
 import random
-from typing import Tuple
 import io
 from translations import t
 
@@ -118,7 +117,7 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
     return buf.getvalue()
 
 
-def format_hours_report(time_entries_html: str) -> Tuple[str, bytes | None, bool]:
+def format_hours_report(time_entries_html: str) -> tuple[str, bytes | None, bool]:
     work_hours = parse_time_entries(time_entries_html)
     if not work_hours:
         return t("no_data"), None, False
