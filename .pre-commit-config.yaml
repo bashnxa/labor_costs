@@ -1,23 +1,24 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
-    -   id: check-yaml
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: check-yaml
+    - id: debug-statements
+    - id: name-tests-test
+    - id: requirements-txt-fixer
+
 -   repo: https://github.com/psf/black
     rev: 25.1.0
     hooks:
     -   id: black
 -   repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.11.5
+    rev: v0.11.6
     hooks:
-      - id: ruff
-        name: ruff-format
-        entry: ruff format
+    - id: ruff
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+    -   id: mypy
         language: system
-        types: [ python ]
-
-      - id: ruff
-        name: ruff-check
-        args: [ --fix ]
