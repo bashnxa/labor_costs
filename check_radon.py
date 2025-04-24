@@ -1,24 +1,38 @@
 import subprocess  # nosec B404
 import sys
 
-BAD_GRADES = {"D", "E", "F"}
+BAD_GRADES = {"C", "D", "E", "F"}  # Какие уровни считаем плохими
 
-# nosec B603 B607
+# nosec B603 B607 — безопасный вызов
 result = subprocess.run(
-    ["radon", "cc", ".", "-s"], stdout=subprocess.PIPE, text=True
+    ["radon", "cc", ".", "-s"],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    text=True,
 )  # nosec B603 B607
-output = result.stdout
+
+if result.returncode != 0:
+    print("❌ Radon check failed: error executing Radon.")
+    sys.exit(1)
+
+output = result.stdout.strip()
+
+if not output:
+    print("❌ Radon check failed: no analyzable code found.")
+    sys.exit(1)
 
 bad = False
+print("\n[radon] Analyzing complexity...\n")
+
 for line in output.splitlines():
     if line.strip().startswith(("F", "M", "C")):
         parts = line.strip().split()
-        if parts and parts[-1] in BAD_GRADES:
+        if parts and parts[-2] in BAD_GRADES:
             bad = True
             print("❌", line)
 
 if bad:
-    print("\nRadon check failed: found complex code (D/E/F).")
+    print("\n❌ Radon check failed: complexity found in BAD_GRADES set.")
     sys.exit(1)
 else:
-    print("Radon check passed.")
+    print("\nRadon check passed.")
