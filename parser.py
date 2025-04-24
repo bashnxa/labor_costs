@@ -57,7 +57,7 @@ def _generate_report(work_hours: dict[str, list[str]]) -> str:
 
 def _find_underworked_employees(work_hours: dict[str, list[str]]) -> list[str]:
     missing_entries: list[str] = []
-    variation = random.uniform(0.95, 1.05)
+    variation = random.uniform(0.95, 1.05)  # nosec B311
     for employee_name, hours in work_hours.items():
         total_hours = int(hours[-1]) if hours and hours[-1].isdigit() else 0
         required_hours = (
