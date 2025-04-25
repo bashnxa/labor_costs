@@ -1,9 +1,9 @@
 import random
 import io
 from translations import t
+from datetime import datetime, timedelta
 
 import matplotlib.pyplot as plt
-
 from bs4 import BeautifulSoup, Tag
 
 from config import EMPLOYEES, WEEKLY_WORK_HOURS, REMINDER_LIMIT
@@ -17,6 +17,40 @@ def extract_last_level_rows(html_content):
         if time_entry_rows
         else t("no_data")
     )
+
+
+def _exclude_vacation_days(
+    employee_name: str, hours: list[str], work_dates: list[str]
+) -> list[str]:
+    vacation_days = EMPLOYEES.get(employee_name, {}).get("vacation_days", [])
+    return [
+        hour for i, hour in enumerate(hours) if str(work_dates[i]) not in vacation_days
+    ]
+
+
+def _adjust_rate_for_vacation(employee_name: str, report_days_count: int) -> float:
+    vacation_days = EMPLOYEES.get(employee_name, {}).get("vacation_days", [])
+    if not vacation_days:
+        return EMPLOYEES.get(employee_name, {}).get("rate", 1.0)
+    last_vacation_day = max([datetime.strptime(v, "%Y-%m-%d") for v in vacation_days])
+    days_since_vacation = (datetime.today() - last_vacation_day).days
+    working_days_since_vacation = max(0, days_since_vacation)
+    rate = EMPLOYEES.get(employee_name, {}).get("rate", 1.0)
+    return rate * (working_days_since_vacation / report_days_count)
+
+
+def _is_employee_on_full_vacation(employee_name: str, report_days_count: int) -> bool:
+    vacation_days = EMPLOYEES.get(employee_name, {}).get("vacation_days", [])
+    if len(vacation_days) != 2:
+        return False
+    start_vacation = datetime.strptime(vacation_days[0], "%Y-%m-%d")
+    end_vacation = datetime.strptime(vacation_days[1], "%Y-%m-%d")
+    today = datetime.today()
+    for i in range(report_days_count):
+        current_day = today - timedelta(days=i)
+        if not (start_vacation <= current_day <= end_vacation):
+            return False
+    return True
 
 
 def parse_time_entries(time_entries_html: str) -> dict[str, list[str]]:
@@ -39,11 +73,10 @@ def parse_time_entries(time_entries_html: str) -> dict[str, list[str]]:
             hours.append(hour_span.get_text(strip=True) if hour_span else "0")
         if employee_name in EMPLOYEES:
             work_hours[employee_name] = hours
-
     return work_hours
 
 
-def _generate_report(work_hours: dict[str, list[str]]) -> str:
+def _generate_report(work_hours: dict[str, list[str]], report_days_count: int) -> str:
     report_message: str = ""
     short_names = [name.split()[0] for name in work_hours.keys()]
     max_name_length: int = max(len(name) for name in short_names)
@@ -55,19 +88,25 @@ def _generate_report(work_hours: dict[str, list[str]]) -> str:
     return f"<pre>{report_message}</pre>"
 
 
-def _find_underworked_employees(work_hours: dict[str, list[str]]) -> list[str]:
+def _find_underworked_employees(
+    work_hours: dict[str, list[str]], report_days_count: int
+) -> list[str]:
     missing_entries: list[str] = []
     variation = random.uniform(0.95, 1.05)  # nosec B311
     for employee_name, hours in work_hours.items():
         total_hours = int(hours[-1]) if hours and hours[-1].isdigit() else 0
+        adjusted_rate = _adjust_rate_for_vacation(employee_name, report_days_count)
         required_hours = (
-            WEEKLY_WORK_HOURS
-            * REMINDER_LIMIT
-            * float(EMPLOYEES.get(employee_name, {}).get("rate", 1.0))
+            WEEKLY_WORK_HOURS * REMINDER_LIMIT * adjusted_rate
         ) * variation
         if total_hours < required_hours:
             missing_entries.append(str(EMPLOYEES[employee_name]["tg"]))
-    absent_employees = [name for name in EMPLOYEES if name not in work_hours]
+    absent_employees = [
+        name
+        for name in EMPLOYEES
+        if name not in work_hours
+        and not _is_employee_on_full_vacation(name, report_days_count)
+    ]
     missing_entries.extend(absent_employees)
     return missing_entries
 
@@ -119,11 +158,12 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
 
 def format_hours_report(time_entries_html: str) -> tuple[str, bytes | None, bool]:
     work_hours = parse_time_entries(time_entries_html)
+    report_days_count = len(work_hours)
     if not work_hours:
         return t("no_data"), None, False
 
-    report_message = _generate_report(work_hours)
-    missing_entries = _find_underworked_employees(work_hours)
+    report_message = _generate_report(work_hours, report_days_count)
+    missing_entries = _find_underworked_employees(work_hours, report_days_count)
     missing_message = (
         "⏳ " + t("fill_hours") + ": " + ", ".join(missing_entries)
         if missing_entries
