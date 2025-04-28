@@ -1,9 +1,9 @@
 import subprocess  # nosec B404
 import sys
 
-BAD_GRADES = {"C", "D", "E", "F"}  # Какие уровни считаем плохими
+BAD_GRADES = {"C", "D", "E", "F"}
 
-# nosec B603 B607 — безопасный вызов
+# nosec B603 B607
 result = subprocess.run(
     ["radon", "cc", ".", "-s"],
     stdout=subprocess.PIPE,
