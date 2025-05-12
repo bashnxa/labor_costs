@@ -6,8 +6,7 @@ BAD_GRADES = {"C", "D", "E", "F"}
 # nosec B603 B607
 result = subprocess.run(
     ["radon", "cc", ".", "-s"],
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
+    capture_output=True,
     text=True,
 )  # nosec B603 B607
 
