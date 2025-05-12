@@ -1,6 +1,8 @@
 import asyncio
+import datetime
 import os
 from functools import partial
+import holidays
 
 from aiogram import Bot, Dispatcher
 from aiogram.types import BufferedInputFile
@@ -26,6 +28,8 @@ dp = Dispatcher()
 scheduler = AsyncIOScheduler()
 set_language(LANG)
 
+holidays_ru = holidays.country_holidays("RU")
+
 
 def validate_env_vars():
     required_vars = [
@@ -46,19 +50,27 @@ def validate_env_vars():
 validate_env_vars()
 
 
+def is_working_day() -> bool:
+    today = datetime.date.today()
+    return today.weekday() < 5 and today not in holidays_ru
+
+
 def start_scheduler(bot: Bot) -> None:
-    scheduler.add_job(
-        partial(scheduled_time_check, bot),
-        trigger=CronTrigger(
-            hour=SCHEDULE_TIME.hour,
-            minute=SCHEDULE_TIME.minute,
-            day_of_week=SCHEDULE_DAYS,
-            timezone=SCHEDULE_TIME.timezone,
-        ),
-        misfire_grace_time=SCHEDULE_MISFIRE_GRACE_TIME,
-        coalesce=SCHEDULE_COALESCE,
-    )
-    scheduler.start()
+    if is_working_day():
+        scheduler.add_job(
+            partial(scheduled_time_check, bot),
+            trigger=CronTrigger(
+                hour=SCHEDULE_TIME.hour,
+                minute=SCHEDULE_TIME.minute,
+                day_of_week=SCHEDULE_DAYS,
+                timezone=SCHEDULE_TIME.timezone,
+            ),
+            misfire_grace_time=SCHEDULE_MISFIRE_GRACE_TIME,
+            coalesce=SCHEDULE_COALESCE,
+        )
+        scheduler.start()
+    else:
+        print("Skipping scheduler because it's a weekend or holiday.")
 
 
 async def scheduled_time_check(bot: Bot) -> None:
