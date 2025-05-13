@@ -22,29 +22,52 @@ def extract_last_level_rows(html_content):
 def _exclude_vacation_days(
     employee_name: str, hours: list[str], work_dates: list[str]
 ) -> list[str]:
-    vacation_days = EMPLOYEES.get(employee_name, {}).get("vacation_days", [])
+    vacation_range = EMPLOYEES.get(employee_name, {}).get("vacation_range", [])
     return [
-        hour for i, hour in enumerate(hours) if str(work_dates[i]) not in vacation_days
+        hour for i, hour in enumerate(hours) if str(work_dates[i]) not in vacation_range
     ]
 
 
 def _adjust_rate_for_vacation(employee_name: str, report_days_count: int) -> float:
-    vacation_days = EMPLOYEES.get(employee_name, {}).get("vacation_days", [])
-    if not vacation_days:
-        return EMPLOYEES.get(employee_name, {}).get("rate", 1.0)
-    last_vacation_day = max([datetime.strptime(v, "%Y-%m-%d") for v in vacation_days])
-    days_since_vacation = (datetime.today() - last_vacation_day).days
-    working_days_since_vacation = max(0, days_since_vacation)
     rate = EMPLOYEES.get(employee_name, {}).get("rate", 1.0)
-    return rate * (working_days_since_vacation / report_days_count)
+    vacation_range = EMPLOYEES.get(employee_name, {}).get("vacation_range", [])
+    if not vacation_range:
+        return rate
+    try:
+        vacation_start = datetime.strptime(vacation_range[0], "%Y-%m-%d")
+        vacation_end = datetime.strptime(vacation_range[1], "%Y-%m-%d")
+    except (ValueError, IndexError):
+        return rate
+    report_end = datetime.today()
+    report_start = report_end - timedelta(days=report_days_count - 1)
+    overlap_start = max(report_start, vacation_start)
+    overlap_end = min(report_end, vacation_end)
+
+    if overlap_start > overlap_end:
+        vacation_workdays = 0
+    else:
+        vacation_workdays = sum(
+            1
+            for i in range((overlap_end - overlap_start).days + 1)
+            if (overlap_start + timedelta(days=i)).weekday() < 5
+        )
+
+    total_workdays = sum(
+        1
+        for i in range((report_end - report_start).days + 1)
+        if (report_start + timedelta(days=i)).weekday() < 5
+    )
+
+    effective_workdays = max(1, total_workdays - vacation_workdays)
+    return rate * (effective_workdays / total_workdays)
 
 
 def _is_employee_on_full_vacation(employee_name: str, report_days_count: int) -> bool:
-    vacation_days = EMPLOYEES.get(employee_name, {}).get("vacation_days", [])
-    if len(vacation_days) != 2:
+    vacation_range = EMPLOYEES.get(employee_name, {}).get("vacation_range", [])
+    if len(vacation_range) != 2:
         return False
-    start_vacation = datetime.strptime(vacation_days[0], "%Y-%m-%d")
-    end_vacation = datetime.strptime(vacation_days[1], "%Y-%m-%d")
+    start_vacation = datetime.strptime(vacation_range[0], "%Y-%m-%d")
+    end_vacation = datetime.strptime(vacation_range[1], "%Y-%m-%d")
     today = datetime.today()
     for i in range(report_days_count):
         current_day = today - timedelta(days=i)

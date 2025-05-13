@@ -1,6 +1,6 @@
 {
   "employees": {
-    "John Doe": { "tg": "@johndoe", "rate": 1.0, "vacation_days": [] },
-    "Jane Smith": { "tg": "@janesmith", "rate": 0.5, "vacation_days": ["2025-04-17", "2025-04-27"] }
+    "John Doe": { "tg": "@johndoe", "rate": 1.0, "vacation_range": [] },
+    "Jane Smith": { "tg": "@janesmith", "rate": 0.5, "vacation_range": ["2025-04-17", "2025-04-27"] }
   }
 }
