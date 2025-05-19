@@ -74,6 +74,8 @@ pydantic_core==2.33.1
 Pygments==2.19.1
 pyparsing==3.2.3
 PySocks==1.7.1
+pytest==8.3.5
+pytest-mock==3.14.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 pytz==2025.2

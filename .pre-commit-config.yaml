@@ -34,11 +34,17 @@ repos:
     rev: 1.8.3
     hooks:
     -   id: bandit
-        args: [--exclude, .venv]
+        args: [--exclude, tests]
 -   repo: local
     hooks:
     -   id: radon-check
         name: radon complexity check
         entry: python check_radon.py
+        language: system
+        pass_filenames: false
+
+    -   id: pytest
+        name: run pytest tests
+        entry: pytest
         language: system
         pass_filenames: false

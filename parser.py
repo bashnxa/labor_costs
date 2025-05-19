@@ -19,15 +19,6 @@ def extract_last_level_rows(html_content):
     )
 
 
-def _exclude_vacation_days(
-    employee_name: str, hours: list[str], work_dates: list[str]
-) -> list[str]:
-    vacation_range = EMPLOYEES.get(employee_name, {}).get("vacation_range", [])
-    return [
-        hour for i, hour in enumerate(hours) if str(work_dates[i]) not in vacation_range
-    ]
-
-
 def _adjust_rate_for_vacation(employee_name: str, report_days_count: int) -> float:
     rate = EMPLOYEES.get(employee_name, {}).get("rate", 1.0)
     vacation_range = EMPLOYEES.get(employee_name, {}).get("vacation_range", [])
