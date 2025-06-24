@@ -77,7 +77,7 @@ def parse_time_entries(time_entries_html: str) -> dict[str, list[str]]:
         employee_name_td = row.find("td", class_="name")
         if not isinstance(employee_name_td, Tag):
             continue
-        employee_name = employee_name_td.get_text(strip=True)
+        employee_name = " ".join(employee_name_td.get_text(strip=True).split())
         hours: list[str] = []
         hour_cells = row.find_all("td", class_="hours")
         for cell in hour_cells:
