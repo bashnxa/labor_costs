@@ -1,3 +1,4 @@
+import re
 import subprocess  # nosec B404
 import sys
 
@@ -23,10 +24,19 @@ if not output:
 bad = False
 print("\n[radon] Analyzing complexity...\n")
 
+RADON_PATTERN = re.compile(
+    r"^(?P<type>[FMC])\s+"
+    r"(?P<name>.*?)\s+"
+    r"(?P<lineno>\d+):\d+\s+"
+    r"(?P<grade>[A-F])\s+"
+    r"(?P<complexity>\d+)"
+)
+
 for line in output.splitlines():
-    if line.strip().startswith(("F", "M", "C")):
-        parts = line.strip().split()
-        if parts and parts[-2] in BAD_GRADES:
+    match = RADON_PATTERN.match(line.strip())
+    if match:
+        grade = match.group("grade")
+        if grade in BAD_GRADES:
             bad = True
             print("❌", line)
 
