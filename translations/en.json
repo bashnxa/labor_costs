@@ -2,6 +2,7 @@
   "no_data": "No data available",
   "weekly_norm": "Weekly norm",
   "half_norm": "50% of norm",
+  "non_working_days": "Non-working days",
   "fill_hours": "Fill in work hours",
   "all_filled": "All employees filled in work hours",
   "error": "Error",

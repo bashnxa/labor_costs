@@ -131,14 +131,16 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
         int(hours[-1]) if hours and hours[-1].isdigit() else 0
         for hours in work_hours.values()
     ]
-    colors = [
-        (
-            "mediumpurple"
-            if float(EMPLOYEES.get(name, {}).get("rate", 1.0)) < 1
-            else "skyblue"
-        )
-        for name in work_hours.keys()
-    ]
+    colors = []
+    for name in work_hours.keys():
+        rate = float(EMPLOYEES.get(name, {}).get("rate", 1.0))
+        adjusted_rate = _adjust_rate_for_vacation(name, len(hours) if hours else 0)
+        if rate < 1:
+            colors.append("mediumpurple")
+        elif adjusted_rate < 1:
+            colors.append("hotpink")
+        else:
+            colors.append("skyblue")
     plt.figure(figsize=(5, 3))
     bars = plt.bar(short_names, hours, color=colors, width=0.6)
     plt.axhline(
@@ -149,6 +151,12 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
         color="mediumpurple",
         linestyle="--",
         label=t("half_norm"),
+    )
+    plt.axhline(
+        y=WEEKLY_WORK_HOURS,
+        color="hotpink",
+        linestyle="--",
+        label=t("non_working_days"),
     )
     plt.xticks(rotation=30, ha="right", fontsize=9)
     plt.yticks(fontsize=9)
