@@ -152,10 +152,13 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
         linestyle="--",
         label=t("half_norm"),
     )
-    plt.axhline(
-        y=WEEKLY_WORK_HOURS,
+    plt.plot(
+        [],
+        [],
         color="hotpink",
-        linestyle="--",
+        marker="s",
+        linestyle="None",
+        markersize=8,
         label=t("non_working_days"),
     )
     plt.xticks(rotation=30, ha="right", fontsize=9)
