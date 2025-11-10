@@ -12,14 +12,16 @@ async def manual_check(message: Message):
     try:
         page_html = fetch_page_source()
         time_entries_html = extract_last_level_rows(page_html)
-        report_message, chart_image, _ = format_hours_report(time_entries_html)
-        if chart_image:
-            image_file = BufferedInputFile(chart_image, filename="work_hours_chart.png")
+        hours_report = format_hours_report(time_entries_html)
+        if hours_report.image:
+            image_file = BufferedInputFile(
+                hours_report.image, filename="work_hours_chart.png"
+            )
             await message.answer_photo(
-                photo=image_file, caption=report_message, parse_mode="HTML"
+                photo=image_file, caption=hours_report.text, parse_mode="HTML"
             )
         else:
-            await message.answer(report_message, parse_mode="HTML")
+            await message.answer(hours_report.text, parse_mode="HTML")
 
     except Exception as error:
         await message.answer(f"❗ {t('error')}: {error}")

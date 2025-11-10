@@ -1,5 +1,8 @@
 import random
 import io
+from dataclasses import dataclass
+
+from schema import EmployeeData
 from translations import t
 from datetime import datetime, timedelta
 
@@ -9,7 +12,14 @@ from bs4 import BeautifulSoup, Tag
 from config import EMPLOYEES, WEEKLY_WORK_HOURS, REMINDER_LIMIT
 
 
-def extract_last_level_rows(html_content):
+@dataclass
+class HoursReport:
+    text: str
+    image: bytes | None
+    has_missing: bool
+
+
+def extract_last_level_rows(html_content: str) -> str:
     soup = BeautifulSoup(html_content, "html.parser")
     time_entry_rows = soup.find_all("tr", class_="last-level")
     return (
@@ -19,20 +29,26 @@ def extract_last_level_rows(html_content):
     )
 
 
+def get_employee_data(name: str) -> EmployeeData | None:
+    employee = EMPLOYEES.get(name)
+    if isinstance(employee, EmployeeData):
+        return employee
+    return None
+
+
 def _adjust_rate_for_vacation(employee_name: str, report_days_count: int) -> float:
-    rate = EMPLOYEES.get(employee_name, {}).get("rate", 1.0)
-    vacation_range = EMPLOYEES.get(employee_name, {}).get("vacation_range", [])
-    if not vacation_range:
+    employee = get_employee_data(employee_name)
+    if not employee:
+        return 1.0
+    rate = employee.rate
+    vacation_range = employee.vacation_range
+    if not vacation_range or len(vacation_range) != 2:
         return rate
-    try:
-        vacation_start = datetime.strptime(vacation_range[0], "%Y-%m-%d")
-        vacation_end = datetime.strptime(vacation_range[1], "%Y-%m-%d")
-    except (ValueError, IndexError):
-        return rate
+    start, end = vacation_range
     report_end = datetime.today()
     report_start = report_end - timedelta(days=report_days_count - 1)
-    overlap_start = max(report_start, vacation_start)
-    overlap_end = min(report_end, vacation_end)
+    overlap_start = max(report_start, start)
+    overlap_end = min(report_end, end)
 
     if overlap_start > overlap_end:
         vacation_workdays = 0
@@ -54,17 +70,15 @@ def _adjust_rate_for_vacation(employee_name: str, report_days_count: int) -> flo
 
 
 def _is_employee_on_full_vacation(employee_name: str, report_days_count: int) -> bool:
-    vacation_range = EMPLOYEES.get(employee_name, {}).get("vacation_range", [])
-    if len(vacation_range) != 2:
+    employee = get_employee_data(employee_name)
+    if not employee or not employee.vacation_range or len(employee.vacation_range) != 2:
         return False
-    start_vacation = datetime.strptime(vacation_range[0], "%Y-%m-%d")
-    end_vacation = datetime.strptime(vacation_range[1], "%Y-%m-%d")
-    today = datetime.today()
-    for i in range(report_days_count):
-        current_day = today - timedelta(days=i)
-        if not (start_vacation <= current_day <= end_vacation):
-            return False
-    return True
+    start_vacation, end_vacation = employee.vacation_range
+    today = datetime.today().date()
+    return all(
+        start_vacation <= today - timedelta(days=i) <= end_vacation
+        for i in range(report_days_count)
+    )
 
 
 def parse_time_entries(time_entries_html: str) -> dict[str, list[str]]:
@@ -114,7 +128,7 @@ def _find_underworked_employees(
             WEEKLY_WORK_HOURS * REMINDER_LIMIT * adjusted_rate
         ) * variation
         if total_hours < required_hours:
-            missing_entries.append(str(EMPLOYEES[employee_name]["tg"]))
+            missing_entries.append(str(EMPLOYEES[employee_name].tg))
     absent_employees = [
         name
         for name in EMPLOYEES
@@ -133,7 +147,8 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
     ]
     colors = []
     for name in work_hours.keys():
-        rate = float(EMPLOYEES.get(name, {}).get("rate", 1.0))
+        employee = get_employee_data(name)
+        rate = employee.rate if employee is not None else 1.0
         adjusted_rate = _adjust_rate_for_vacation(name, len(hours) if hours else 0)
         if rate < 1:
             colors.append("mediumpurple")
@@ -181,18 +196,22 @@ def _generate_hours_chart(work_hours: dict[str, list[str]]) -> bytes:
     return buf.getvalue()
 
 
-def format_hours_report(time_entries_html: str) -> tuple[str, bytes | None, bool]:
+def format_hours_report(time_entries_html: str) -> HoursReport:
     work_hours = parse_time_entries(time_entries_html)
     report_days_count = len(work_hours)
     if not work_hours:
-        return t("no_data"), None, False
+        return HoursReport(t("no_data"), None, False)
 
     report_message = _generate_report(work_hours, report_days_count)
     missing_entries = _find_underworked_employees(work_hours, report_days_count)
-    missing_message = (
+    status = (
         "⏳ " + t("fill_hours") + ": " + ", ".join(missing_entries)
         if missing_entries
         else "✅ " + t("all_filled")
     )
     chart_image = _generate_hours_chart(work_hours)
-    return report_message + missing_message, chart_image, bool(missing_entries)
+    return HoursReport(
+        text=(report_message + status),
+        image=chart_image,
+        has_missing=bool(missing_entries),
+    )

@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from parser import (
     extract_last_level_rows,
@@ -8,6 +10,7 @@ from parser import (
     _generate_report,
 )
 from config import EMPLOYEES
+from schema import EmployeeData
 
 
 @pytest.fixture
@@ -43,7 +46,9 @@ def test_adjust_rate_for_vacation_no_vacation():
 
 
 def test_is_employee_on_full_vacation():
-    EMPLOYEES["Carol"] = {"vacation_range": ["2024-01-01", "2100-01-01"]}
+    EMPLOYEES["Carol"] = EmployeeData(
+        tg="", rate=1, vacation_range=[date(2024, 1, 1), date(2100, 1, 1)]
+    )
     result = _is_employee_on_full_vacation("Carol", 3)
     assert result is True
 
@@ -56,7 +61,7 @@ def test_generate_report_format():
 
 
 def test_find_underworked_employee(monkeypatch):
-    EMPLOYEES["Eve"] = {"rate": 1.0, "tg": "@eve"}
+    EMPLOYEES["Eve"] = EmployeeData(tg="@eve", rate=1.0)
     monkeypatch.setattr("parser.random.uniform", lambda *args, **kwargs: 1.0)
     monkeypatch.setattr("parser._is_employee_on_full_vacation", lambda *a, **kw: False)
     hours_data = {"Eve": ["1", "2", "3", "4", "5", "6", "10"]}

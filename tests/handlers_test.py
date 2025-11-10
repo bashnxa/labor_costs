@@ -1,6 +1,7 @@
 import pytest
 from aiogram.types import Message
 from handlers import manual_check
+from parser import HoursReport
 
 
 @pytest.mark.asyncio
@@ -9,7 +10,9 @@ async def test_manual_check_success(mocker):
     mocker.patch("handlers.extract_last_level_rows", return_value="parsed_html")
 
     mocked_format = mocker.patch("handlers.format_hours_report")
-    mocked_format.return_value = ("<b>Report text</b>", b"fake_image_data", None)
+    mocked_format.return_value = HoursReport(
+        "<b>Report text</b>", b"fake_image_data", False
+    )
 
     mock_message = mocker.Mock(spec=Message)
     mock_message.answer_photo = mocker.AsyncMock()
@@ -29,7 +32,7 @@ async def test_manual_check_text_only(mocker):
     mocker.patch("handlers.extract_last_level_rows", return_value="parsed_html")
 
     mocked_format = mocker.patch("handlers.format_hours_report")
-    mocked_format.return_value = ("<b>Report no image</b>", None, None)
+    mocked_format.return_value = HoursReport("<b>Report no image</b>", None, None)
 
     mock_message = mocker.Mock(spec=Message)
     mock_message.answer = mocker.AsyncMock()

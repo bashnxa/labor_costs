@@ -6,6 +6,8 @@ import bot
 from bot import is_working_day, scheduled_time_check, validate_env_vars
 from aiogram import Bot
 
+from parser import HoursReport
+
 
 def test_is_working_day_weekday(mocker):
     mocker.patch("bot.datetime", wraps=datetime)
@@ -34,7 +36,8 @@ async def test_scheduled_time_check_with_image(mocker):
     mocker.patch("bot.fetch_page_source", return_value="<html>...</html>")
     mocker.patch("bot.extract_last_level_rows", return_value="parsed_html")
     mocker.patch(
-        "bot.format_hours_report", return_value=("Test report", b"image-bytes", True)
+        "bot.format_hours_report",
+        return_value=HoursReport("Test report", b"image-bytes", True),
     )
     await scheduled_time_check(fake_bot)
     fake_bot.send_photo.assert_awaited_once()
@@ -49,7 +52,8 @@ async def test_scheduled_time_check_text_only(mocker):
     mocker.patch("bot.fetch_page_source", return_value="<html>...</html>")
     mocker.patch("bot.extract_last_level_rows", return_value="parsed_html")
     mocker.patch(
-        "bot.format_hours_report", return_value=("Text-only report", None, True)
+        "bot.format_hours_report",
+        return_value=HoursReport("Text-only report", None, True),
     )
     await scheduled_time_check(fake_bot)
     fake_bot.send_message.assert_awaited_once_with(

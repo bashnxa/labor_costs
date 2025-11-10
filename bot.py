@@ -77,24 +77,22 @@ async def scheduled_time_check(bot: Bot) -> None:
     try:
         page_html: str = fetch_page_source()
         time_entries_html: str = extract_last_level_rows(page_html)
-        report_message, chart_image, has_missing_entries = format_hours_report(
-            time_entries_html
-        )
+        hours_report = format_hours_report(time_entries_html)
 
-        if has_missing_entries:
-            if chart_image:
+        if hours_report.has_missing:
+            if hours_report.image:
                 image_file = BufferedInputFile(
-                    chart_image, filename="work_hours_chart.png"
+                    hours_report.image, filename="work_hours_chart.png"
                 )
                 await bot.send_photo(
                     TELEGRAM_CHAT_ID,
                     photo=image_file,
-                    caption=report_message,
+                    caption=hours_report.text,
                     parse_mode="HTML",
                 )
             else:
                 await bot.send_message(
-                    TELEGRAM_CHAT_ID, report_message, parse_mode="HTML"
+                    TELEGRAM_CHAT_ID, hours_report.text, parse_mode="HTML"
                 )
     except Exception as error:
         await bot.send_message(TELEGRAM_CHAT_ID, f"❗ {t('error')}: {error}")
