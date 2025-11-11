@@ -45,7 +45,7 @@ def _adjust_rate_for_vacation(employee_name: str, report_days_count: int) -> flo
     if not vacation_range or len(vacation_range) != 2:
         return rate
     start, end = vacation_range
-    report_end = datetime.today()
+    report_end = datetime.today().date()
     report_start = report_end - timedelta(days=report_days_count - 1)
     overlap_start = max(report_start, start)
     overlap_end = min(report_end, end)
