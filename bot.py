@@ -21,6 +21,7 @@ from config import (
 from aiohttp import TCPConnector
 from handlers import register_handlers
 from parser import extract_last_level_rows, format_hours_report
+from praise_team import praise_team
 from redmine import fetch_page_source
 from translations import t, set_language
 
@@ -94,6 +95,8 @@ async def scheduled_time_check(bot: Bot) -> None:
                 await bot.send_message(
                     TELEGRAM_CHAT_ID, hours_report.text, parse_mode="HTML"
                 )
+        else:
+            await bot.send_message(TELEGRAM_CHAT_ID, praise_team())
     except Exception as error:
         await bot.send_message(TELEGRAM_CHAT_ID, f"❗ {t('error')}: {error}")
 

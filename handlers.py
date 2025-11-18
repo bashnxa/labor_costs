@@ -1,6 +1,7 @@
 from aiogram import Dispatcher
 from aiogram.types import Message
 from aiogram.filters import Command
+
 from redmine import fetch_page_source
 from parser import extract_last_level_rows, format_hours_report
 from aiogram.types import BufferedInputFile
