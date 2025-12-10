@@ -20,9 +20,13 @@ WEEKLY_WORK_HOURS: int = 40
 
 TimeConfig = namedtuple("TimeConfig", ["hour", "minute", "timezone"])
 SCHEDULE_TIME = TimeConfig(hour=16, minute=45, timezone=timezone("Asia/Yekaterinburg"))
+SCHEDULE_TIME_PERSONAL = TimeConfig(
+    hour=16, minute=40, timezone=timezone("Asia/Yekaterinburg")
+)
 SCHEDULE_DAYS = "mon-fri"
 SCHEDULE_MISFIRE_GRACE_TIME = 30
 SCHEDULE_COALESCE = True
+SUBSCRIBERS_FILE = "C:/git/labor_costs_remote/subscribers.json"
 
 
 config_path = os.getenv("CONFIG_PATH", "config.json")

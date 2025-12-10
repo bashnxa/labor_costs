@@ -10,7 +10,7 @@ def praise_team():
     try:
         phrases_text = "\n".join([f"- {phrase}" for phrase in phrases])
         response = ollama.generate(
-            model="llama3.1",
+            model="qwen2.5",
             system=t("phrases_system"),
             prompt=t("phrases_prompt").format(phrases_text=phrases_text),
         )
