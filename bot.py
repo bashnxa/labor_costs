@@ -22,6 +22,7 @@ from config import (
     LANG,
     SUBSCRIBERS_FILE,
     EMPLOYEES,
+    SCHEDULE_TIME_PERSONAL,
 )
 from aiohttp import TCPConnector
 from handlers import register_handlers
@@ -70,6 +71,17 @@ def start_scheduler(bot: Bot, SCHEDULE_TIME_PERSONALME=None) -> None:
                 minute=SCHEDULE_TIME.minute,
                 day_of_week=SCHEDULE_DAYS,
                 timezone=SCHEDULE_TIME.timezone,
+            ),
+            misfire_grace_time=SCHEDULE_MISFIRE_GRACE_TIME,
+            coalesce=SCHEDULE_COALESCE,
+        )
+        scheduler.add_job(
+            partial(scheduled_personal_time_check, bot),
+            trigger=CronTrigger(
+                hour=SCHEDULE_TIME_PERSONAL.hour,
+                minute=SCHEDULE_TIME_PERSONAL.minute,
+                day_of_week=SCHEDULE_DAYS,
+                timezone=SCHEDULE_TIME_PERSONAL.timezone,
             ),
             misfire_grace_time=SCHEDULE_MISFIRE_GRACE_TIME,
             coalesce=SCHEDULE_COALESCE,
