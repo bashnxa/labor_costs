@@ -21,7 +21,7 @@ WEEKLY_WORK_HOURS: int = 40
 TimeConfig = namedtuple("TimeConfig", ["hour", "minute", "timezone"])
 SCHEDULE_TIME = TimeConfig(hour=16, minute=45, timezone=timezone("Asia/Yekaterinburg"))
 SCHEDULE_TIME_PERSONAL = TimeConfig(
-    hour=16, minute=40, timezone=timezone("Asia/Yekaterinburg")
+    hour=16, minute=30, timezone=timezone("Asia/Yekaterinburg")
 )
 SCHEDULE_DAYS = "mon-fri"
 SCHEDULE_MISFIRE_GRACE_TIME = 30

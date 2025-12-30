@@ -105,24 +105,36 @@ async def scheduled_time_check_by_user(bot, user_id, username):
 
     soup = BeautifulSoup(time_entries_html, "html.parser")
     rows = soup.find_all("tr", class_="last-level")
+
+    target_row = None
     for row in rows:
         name_link = row.find("a")
         if name_link and name_link.get_text().strip() == target_name:
-            for sibling in row.find_previous_siblings():
-                if sibling.name == "tr" and "last-level" in sibling.get("class", []):
-                    sibling.decompose()
-            for sibling in row.find_next_siblings():
-                if sibling.name == "tr" and "last-level" in sibling.get("class", []):
-                    sibling.decompose()
+            target_row = row
             break
 
-    hours_report = format_hours_report(str(soup))
-    if not hours_report.text:
-        await bot.send_message(
-            user_id, hours_report.text.split("\n")[0], parse_mode="HTML"
+    if not target_row:
+        return
+
+    new_soup = BeautifulSoup("<table></table>", "html.parser")
+    table = new_soup.find("table")
+    if table:
+        table.append(target_row)
+
+    hours_report = format_hours_report(str(new_soup))
+
+    if hours_report.image:
+        image_file = BufferedInputFile(
+            hours_report.image, filename="work_hours_chart.png"
         )
-        if username not in hours_report.text and (target_name in hours_report.text):
-            await bot.send_message(user_id, praise_team())
+        await bot.send_photo(
+            user_id,
+            photo=image_file,
+            caption=hours_report.text,
+            parse_mode="HTML",
+        )
+    else:
+        await bot.send_message(user_id, hours_report.text, parse_mode="HTML")
 
 
 async def scheduled_personal_time_check(bot: Bot) -> None:
