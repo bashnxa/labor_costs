@@ -15,6 +15,8 @@ REDMINE_PASSWORD = os.getenv("REDMINE_PASSWORD", "")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 REPORT_URL = os.getenv("REPORT_URL", "")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "deepseek-coder")
 REMINDER_LIMIT: float = 0.75
 WEEKLY_WORK_HOURS: int = 40
 

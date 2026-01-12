@@ -31,6 +31,7 @@ Get bite-sized Python tips, best practices and refactoring tricks
 | `/check` | Manually check and display current work hours report | All chats |
 | `/subscribe` | Subscribe to daily personal work hours report (sent to private messages) | Private chats only |
 | `/unsubscribe` | Unsubscribe from daily personal work hours report | Private chats only |
+| `/chat` | Chat with AI assistant using Ollama model | Private chats only |
 
 ## ⏰ Scheduled Reports
 
@@ -40,3 +41,26 @@ The bot runs two scheduled tasks on working days (Monday-Friday, excluding Russi
 - **Personal Reports**: Sent to subscribed users at 16:30 (Asia/Yekaterinburg)
 
 Schedule times can be configured in `config.py` via `SCHEDULE_TIME` and `SCHEDULE_TIME_PERSONAL` variables.
+
+## 🤖 AI Chat (Ollama)
+
+The bot includes an AI chat feature powered by **Ollama**. Users can chat with the AI assistant in private messages using the `/chat` command.
+
+### Setup Ollama
+
+1. Install Ollama: https://ollama.com/download
+2. Pull the model (default: `deepseek-coder`):
+   ```bash
+   ollama pull deepseek-coder
+   ```
+3. Configure environment variables in `.env`:
+   ```
+   OLLAMA_HOST = "http://localhost:11434"
+   OLLAMA_MODEL = "deepseek-coder"
+   ```
+
+### Usage
+
+- Send `/chat` in private messages to start chatting with AI
+- The bot maintains conversation history for each user (up to 10 messages)
+- Available only in private chats

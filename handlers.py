@@ -1,15 +1,24 @@
 import json
+import logging
+from collections import defaultdict
 
 from aiogram import Dispatcher
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.filters import Command
+from ollama import Client
 
-from config import SUBSCRIBERS_FILE
+from config import SUBSCRIBERS_FILE, OLLAMA_HOST, OLLAMA_MODEL
 from redmine import fetch_page_source
 from parser import extract_last_level_rows, format_hours_report
 from aiogram.types import BufferedInputFile
 
 from translations import t
+
+# Store conversation history for each user
+conversation_history: dict[int, list[dict[str, str]]] = defaultdict(list)
+MAX_HISTORY_LENGTH = 10
+
+ollama_client = Client(host=OLLAMA_HOST)
 
 
 async def manual_check(message: Message):
@@ -67,9 +76,10 @@ def get_main_keyboard():
             [KeyboardButton(text="/check")],
             [KeyboardButton(text="/subscribe")],
             [KeyboardButton(text="/unsubscribe")],
+            [KeyboardButton(text="/chat")],
         ],
-        resize_keyboard=True,  # Клавиатура будет уменьшена в размере
-        one_time_keyboard=False,  # Клавиатура останется после нажатия
+        resize_keyboard=True,
+        one_time_keyboard=False,
     )
     return keyboard
 
@@ -87,8 +97,48 @@ async def unsubscribe(message: Message):
     await _subscription_command(message, subscribe=False)
 
 
+async def chat_message(message: Message):
+    if message.chat.type != "private":
+        await message.answer(
+            "📝 Пожалуйста, напишите в личные сообщения бота для общения с AI"
+        )
+        return
+
+    if message.from_user is None or message.text is None:
+        return
+
+    user_id = message.from_user.id
+    user_message = message.text
+
+    conversation_history[user_id].append({"role": "user", "content": user_message})
+
+    if len(conversation_history[user_id]) > MAX_HISTORY_LENGTH:
+        conversation_history[user_id] = conversation_history[user_id][
+            -MAX_HISTORY_LENGTH:
+        ]
+
+    try:
+        response = ollama_client.chat(
+            model=OLLAMA_MODEL,
+            messages=conversation_history[user_id],
+        )
+
+        ai_message = response["message"]["content"]
+
+        conversation_history[user_id].append(
+            {"role": "assistant", "content": ai_message}
+        )
+
+        await message.answer(ai_message)
+
+    except Exception as e:
+        logging.error(f"Error in chat_message for user {user_id}: {e}")
+        await message.answer("❗ Произошла ошибка при общении с AI. Попробуйте позже.")
+
+
 def register_handlers(dp: Dispatcher):
     dp.message.register(send_welcome, Command("start"))
     dp.message.register(manual_check, Command("check"))
     dp.message.register(subscribe, Command("subscribe"))
     dp.message.register(unsubscribe, Command("unsubscribe"))
+    dp.message.register(chat_message, Command("chat"))
