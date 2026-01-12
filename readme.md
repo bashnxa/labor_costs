@@ -31,7 +31,7 @@ Get bite-sized Python tips, best practices and refactoring tricks
 | `/check` | Manually check and display current work hours report | All chats |
 | `/subscribe` | Subscribe to daily personal work hours report (sent to private messages) | Private chats only |
 | `/unsubscribe` | Unsubscribe from daily personal work hours report | Private chats only |
-| `/chat` | Chat with AI assistant using Ollama model | Private chats only |
+| Any message | Chat with AI assistant using Ollama model (works in private messages only) | Private chats only |
 
 ## ⏰ Scheduled Reports
 
@@ -61,6 +61,6 @@ The bot includes an AI chat feature powered by **Ollama**. Users can chat with t
 
 ### Usage
 
-- Send `/chat` in private messages to start chatting with AI
+- Send any message in private messages to chat with AI
 - The bot maintains conversation history for each user (up to 10 messages)
 - Available only in private chats

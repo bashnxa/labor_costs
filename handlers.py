@@ -76,7 +76,6 @@ def get_main_keyboard():
             [KeyboardButton(text="/check")],
             [KeyboardButton(text="/subscribe")],
             [KeyboardButton(text="/unsubscribe")],
-            [KeyboardButton(text="/chat")],
         ],
         resize_keyboard=True,
         one_time_keyboard=False,
@@ -141,4 +140,4 @@ def register_handlers(dp: Dispatcher):
     dp.message.register(manual_check, Command("check"))
     dp.message.register(subscribe, Command("subscribe"))
     dp.message.register(unsubscribe, Command("unsubscribe"))
-    dp.message.register(chat_message, Command("chat"))
+    dp.message.register(chat_message)
