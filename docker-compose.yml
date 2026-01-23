@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  labor-costs-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: labor-costs-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      - ollama
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./subscribers.json:/app/subscribers.json
+    networks:
+      - bot-network
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      - OLLAMA_MODELS=deepseek-coder
+    networks:
+      - bot-network
+    entrypoint: >
+      /bin/sh -c "
+        ollama serve &
+        sleep 5 &&
+        ollama pull deepseek-coder &&
+        wait
+      "
+
+networks:
+  bot-network:
+    driver: bridge
+
+volumes:
+  ollama-data:
+    driver: local

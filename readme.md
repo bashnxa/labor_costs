@@ -64,3 +64,58 @@ The bot includes an AI chat feature powered by **Ollama**. Users can chat with t
 - Send any message in private messages to chat with AI
 - The bot maintains conversation history for each user (up to 10 messages)
 - Available only in private chats
+
+## 🐳 Docker Deployment
+
+### Using Docker Compose (Recommended)
+
+The easiest way to run the project with all dependencies including Ollama:
+
+1. **Create environment file**:
+   ```bash
+   cp .env.example .env
+   # Edit .env and fill in the required variables
+   ```
+
+2. **Create configuration files**:
+   ```bash
+   cp config.example.json config.json
+   # Edit config.json and add employee information
+   ```
+
+3. **Start all services**:
+   ```bash
+   docker-compose up -d
+   ```
+
+   This will start:
+   - The bot service
+   - Ollama service with the `deepseek-coder` model automatically downloaded
+
+4. **View logs**:
+   ```bash
+   docker-compose logs -f
+   ```
+
+5. **Stop services**:
+   ```bash
+   docker-compose down
+   ```
+
+**Note**: The `OLLAMA_HOST` environment variable is automatically configured in `docker-compose.yml` to point to the Ollama service.
+
+### Using Docker (Manual)
+
+If you prefer to run the bot without Docker Compose or use an external Ollama instance:
+
+1. **Build the image**:
+   ```bash
+   docker build -t labor-costs-bot .
+   ```
+
+2. **Run the container**:
+   ```bash
+   docker run -d --name labor-costs-bot --env-file .env labor-costs-bot
+   ```
+
+**Note**: If using an external Ollama instance, make sure to set `OLLAMA_HOST` in your `.env` file to point to your Ollama server.
