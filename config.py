@@ -18,6 +18,17 @@ REPORT_URL = os.getenv("REPORT_URL", "")
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "deepseek-coder")
 REMINDER_LIMIT: float = 0.75
+
+# Proxy configuration
+PROXY_URLS_STR = os.getenv("PROXY_URLS", "")
+PROXY_URLS = (
+    [url.strip() for url in PROXY_URLS_STR.split(",") if url.strip()]
+    if PROXY_URLS_STR
+    else []
+)
+PROXY_TEST_URL = os.getenv("PROXY_TEST_URL", "https://api.telegram.org")
+PROXY_TEST_TIMEOUT = float(os.getenv("PROXY_TEST_TIMEOUT", "10.0"))
+PROXY_ERROR_THRESHOLD = int(os.getenv("PROXY_ERROR_THRESHOLD", "3"))
 WEEKLY_WORK_HOURS: int = 40
 
 TimeConfig = namedtuple("TimeConfig", ["hour", "minute", "timezone"])

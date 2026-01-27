@@ -3,7 +3,14 @@ import logging
 from collections import defaultdict
 
 from aiogram import Dispatcher
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import (
+    Message,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 from aiogram.filters import Command
 from ollama import Client
 
@@ -11,6 +18,7 @@ from config import SUBSCRIBERS_FILE, OLLAMA_HOST, OLLAMA_MODEL
 from redmine import fetch_page_source
 from parser import extract_last_level_rows, format_hours_report
 from aiogram.types import BufferedInputFile
+from praise_team import praise_team
 
 from translations import t
 
@@ -135,9 +143,45 @@ async def chat_message(message: Message):
         await message.answer("❗ Произошла ошибка при общении с AI. Попробуйте позже.")
 
 
+async def praise_team_callback(callback: CallbackQuery):
+    """Handle 'Praise Team' button click."""
+    try:
+        praise_message = praise_team()
+        if callback.message:
+            await callback.message.answer(praise_message)
+        await callback.answer()
+    except Exception as e:
+        error_msg = str(e)
+        logging.error(f"Error in praise_team_callback: {error_msg}")
+
+        # Check if error is related to old query timeout
+        if (
+            "too old" in error_msg
+            or "timeout expired" in error_msg
+            or "query ID is invalid" in error_msg
+        ):
+            await callback.answer(
+                "⏰ This button has expired. Please use /check for current report.",
+                show_alert=True,
+            )
+        else:
+            await callback.answer("❗ Error sending praise", show_alert=True)
+
+
 def register_handlers(dp: Dispatcher):
     dp.message.register(send_welcome, Command("start"))
     dp.message.register(manual_check, Command("check"))
     dp.message.register(subscribe, Command("subscribe"))
     dp.message.register(unsubscribe, Command("unsubscribe"))
     dp.message.register(chat_message)
+    dp.callback_query.register(praise_team_callback, lambda c: c.data == "praise_team")
+
+
+def get_praise_keyboard():
+    """Create inline keyboard with 'Praise Team' button."""
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🎉 Praise Team", callback_data="praise_team")]
+        ]
+    )
+    return keyboard

@@ -44,6 +44,8 @@ async def test_scheduled_time_check_with_image(mocker):
     args, kwargs = fake_bot.send_photo.call_args
     assert kwargs["caption"] == "Test report"
     assert kwargs["parse_mode"] == "HTML"
+    assert "reply_markup" in kwargs
+    assert kwargs["reply_markup"] is not None
 
 
 @pytest.mark.asyncio
@@ -57,8 +59,11 @@ async def test_scheduled_time_check_text_only(mocker):
     )
     await scheduled_time_check(fake_bot)
     fake_bot.send_message.assert_awaited_once_with(
-        mock.ANY, "Text-only report", parse_mode="HTML"
+        mock.ANY, "Text-only report", parse_mode="HTML", reply_markup=mock.ANY
     )
+    args, kwargs = fake_bot.send_message.call_args
+    assert "reply_markup" in kwargs
+    assert kwargs["reply_markup"] is not None
 
 
 @pytest.mark.asyncio
@@ -94,3 +99,53 @@ def test_validate_env_vars_missing(monkeypatch):
         OSError, match="Missing required environment variable: BOT_TOKEN"
     ):
         validate_env_vars()
+
+
+@pytest.mark.asyncio
+async def test_scheduled_time_check_with_praise(mocker):
+    """Test that praise message includes inline keyboard."""
+    fake_bot = mock.AsyncMock(spec=Bot)
+    mocker.patch("bot.fetch_page_source", return_value="<html>...</html>")
+    mocker.patch("bot.extract_last_level_rows", return_value="parsed_html")
+    mocker.patch(
+        "bot.format_hours_report",
+        return_value=HoursReport("All good report", None, False),
+    )
+    await scheduled_time_check(fake_bot)
+    fake_bot.send_message.assert_awaited_once()
+    args, kwargs = fake_bot.send_message.call_args
+    assert "reply_markup" in kwargs
+    assert kwargs["reply_markup"] is not None
+
+
+@pytest.mark.asyncio
+async def test_scheduled_time_check_keyboard_structure(mocker):
+    """Test that inline keyboard has correct structure with 'Praise Team' button."""
+    from handlers import get_praise_keyboard
+
+    fake_bot = mock.AsyncMock(spec=Bot)
+    mocker.patch("bot.fetch_page_source", return_value="<html>...</html>")
+    mocker.patch("bot.extract_last_level_rows", return_value="parsed_html")
+    mocker.patch(
+        "bot.format_hours_report",
+        return_value=HoursReport("Test report", None, True),
+    )
+    await scheduled_time_check(fake_bot)
+
+    # Check that the keyboard was called
+    args, kwargs = fake_bot.send_message.call_args
+    reply_markup = kwargs.get("reply_markup")
+
+    # Verify it's an InlineKeyboardMarkup
+    assert reply_markup is not None
+    assert hasattr(reply_markup, "inline_keyboard")
+
+    # Get the expected keyboard structure
+    expected_keyboard = get_praise_keyboard()
+    assert reply_markup.inline_keyboard == expected_keyboard.inline_keyboard
+
+    # Verify the button data
+    keyboard_buttons = reply_markup.inline_keyboard[0]
+    assert len(keyboard_buttons) == 1
+    assert keyboard_buttons[0].text == "🎉 Praise Team"
+    assert keyboard_buttons[0].callback_data == "praise_team"

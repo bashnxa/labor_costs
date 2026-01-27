@@ -23,19 +23,31 @@ from config import (
     SUBSCRIBERS_FILE,
     EMPLOYEES,
     SCHEDULE_TIME_PERSONAL,
+    PROXY_URLS,
+    PROXY_TEST_URL,
+    PROXY_TEST_TIMEOUT,
+    PROXY_ERROR_THRESHOLD,
 )
-from aiohttp import TCPConnector
 from handlers import register_handlers
 from parser import extract_last_level_rows, format_hours_report
 from praise_team import praise_team
 from redmine import fetch_page_source
 from translations import t, set_language
+from proxy_manager import ProxyManager
 
 dp = Dispatcher()
 scheduler = AsyncIOScheduler()
 set_language(LANG)
 
 holidays_ru = holidays.country_holidays("RU")
+
+# Initialize proxy manager
+proxy_manager = ProxyManager(
+    proxy_urls=PROXY_URLS,
+    test_url=PROXY_TEST_URL,
+    test_timeout=PROXY_TEST_TIMEOUT,
+    error_threshold=PROXY_ERROR_THRESHOLD,
+)
 
 
 def validate_env_vars():
@@ -159,6 +171,10 @@ async def scheduled_time_check(bot: Bot) -> None:
         time_entries_html: str = extract_last_level_rows(page_html)
         hours_report = format_hours_report(time_entries_html)
 
+        from handlers import get_praise_keyboard
+
+        praise_keyboard = get_praise_keyboard()
+
         if hours_report.has_missing:
             if hours_report.image:
                 image_file = BufferedInputFile(
@@ -169,25 +185,61 @@ async def scheduled_time_check(bot: Bot) -> None:
                     photo=image_file,
                     caption=hours_report.text,
                     parse_mode="HTML",
+                    reply_markup=praise_keyboard,
                 )
             else:
                 await bot.send_message(
-                    TELEGRAM_CHAT_ID, hours_report.text, parse_mode="HTML"
+                    TELEGRAM_CHAT_ID,
+                    hours_report.text,
+                    parse_mode="HTML",
+                    reply_markup=praise_keyboard,
                 )
         else:
-            await bot.send_message(TELEGRAM_CHAT_ID, praise_team())
+            await bot.send_message(
+                TELEGRAM_CHAT_ID, praise_team(), reply_markup=praise_keyboard
+            )
     except Exception as error:
         await bot.send_message(TELEGRAM_CHAT_ID, f"❗ {t('error')}: {error}")
 
 
 async def main():
-    connector = TCPConnector(ttl_dns_cache=300)
+    # Initialize proxy manager and find best connection
+    await proxy_manager.initialize()
+
+    # Create bot with current connector
+    connector = await proxy_manager.get_connector()
     bot = Bot(token=BOT_TOKEN, connector=connector)
 
     register_handlers(dp)
     start_scheduler(bot)
+
+    # Add middleware for error tracking
+    @dp.errors()
+    async def error_handler(event):
+        error = event.exception
+        logging.error(f"Bot error: {error}")
+
+        # Check if it's a Telegram API error that might indicate connection issues
+        if "Conflict" in str(error) or "terminated by other" in str(error):
+            await proxy_manager.report_error(error)
+
+            # Check if we need to restart with new connector
+            if proxy_manager.current_connector != connector:
+                logging.info("Connector changed, restarting bot with new connection...")
+                await bot.session.close()
+                new_connector = await proxy_manager.get_connector()
+                new_bot = Bot(token=BOT_TOKEN, connector=new_connector)
+                register_handlers(dp)
+                start_scheduler(new_bot)
+                await dp.start_polling(new_bot)
+
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logging.info("Shutting down...")
+    finally:
+        asyncio.run(proxy_manager.shutdown())
