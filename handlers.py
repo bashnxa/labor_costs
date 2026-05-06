@@ -131,8 +131,17 @@ async def chat_message(message: Message):
         await message.answer(ai_message)
 
     except Exception as e:
-        logging.error(f"Error in chat_message for user {user_id}: {e}")
-        await message.answer("❗ Произошла ошибка при общении с AI. Попробуйте позже.")
+        error_msg = str(e)
+        if "connection" in error_msg.lower() or "timeout" in error_msg.lower():
+            logging.error(f"Ollama service unavailable for user {user_id}: {e}")
+            await message.answer(
+                "❗ Сервис AI временно недоступен. Попробуйте позже или обратитесь к администратору."
+            )
+        else:
+            logging.error(f"Error in chat_message for user {user_id}: {e}")
+            await message.answer(
+                "❗ Произошла ошибка при общении с AI. Попробуйте позже."
+            )
 
 
 def register_handlers(dp: Dispatcher):

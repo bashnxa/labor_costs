@@ -177,6 +177,7 @@ async def scheduled_time_check(bot: Bot) -> None:
         else:
             await bot.send_message(TELEGRAM_CHAT_ID, praise_team())
     except Exception as error:
+        logging.error(f"Error in scheduled_time_check: {error}")
         await bot.send_message(TELEGRAM_CHAT_ID, f"❗ {t('error')}: {error}")
 
 
